@@ -6,10 +6,11 @@ end = 0
 with open(sys.argv[1],"r") as f:
     for line in f:
         if line[0:5] == "From:" and start == 1:
+            start = 0
             print(".")
             user_input = input()
             if user_input[0:4] != "250 ":
-                print(user_input)
+                print(user_input, file=sys.stderr)
                 print("QUIT")
                 exit()
             else:
