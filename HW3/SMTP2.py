@@ -57,13 +57,9 @@ with open(sys.argv[1],"r") as f:
 
 print(".")
 user_input = input()
-if user_input[0:4] != "250 ":
-    print(user_input, file=sys.stderr)
-    print("QUIT")
-    exit()
-else:
-    print(user_input, file=sys.stderr)
-    exit()
+print(user_input, file=sys.stderr)
+print("QUIT")
+exit()
 
 
         
