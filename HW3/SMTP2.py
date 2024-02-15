@@ -14,7 +14,7 @@ with open(sys.argv[1],"r") as f:
                 print("QUIT")
                 exit()
             else:
-                print(user_input)
+                print(user_input, file=sys.stderr)
             print("MAIL FROM:" + line[5:-1])
             user_input = input()
             if user_input[0:4] != "250 ":
