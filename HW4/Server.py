@@ -255,7 +255,6 @@ connected = False
 s = socket.socket()
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 host = socket.gethostname()
-print(host)
 port = int(sys.argv[1])
 s.bind((host,port))
 s.listen(5)
@@ -267,90 +266,91 @@ file_path = []
 if_data = False
 
 while True:
-    c, addr = s.accept()
-    c.send(f"220 {host}\n".encode())
-    message = c.recv(4096).decode()
     if connected == False:
-        server_message = "250 Hello " + message[4:] + "pleased to meet you\n"
+        c, addr = s.accept()
+        c.send(f"220 {host}\n".encode())
+        message = c.recv(4096).decode()
+        sys.stdout.write(message)
+        server_message = "250 Hello" + message[4:-1] + " pleased to meet you\n"
         c.send(server_message.encode())
         connected = True
     else:
+        message = c.recv(4096).decode()
+        idx = 0
+        syntax_error = 0
         if message == "QUIT\n":
             c.send(f'221 {host} closing connection\n'.encode())
             connected = False
             c.close()
-        idx = 0
-        syntax_error = 0
-        if previous == 0:
+        elif previous == 0:
             if is_mail_from_cmd(message):
-                c.send("250 OK")
+                c.send("250 OK\n".encode())
                 previous = 1
                 mail_from = re.search('<(.+?)>', message)
                 if mail_from:
                     address = mail_from.group(1)
-                data += "From: <" + address + ">\n"
             else:
                 if is_rcpt_to_cmd(message) or is_data_cmd(message):
-                    c.send("503 Bad sequence of commands")
+                    c.send("503 Bad sequence of commands\n".encode())
                     previous = 0
                     data = ""
                     file_path = []
                 else:
                     if syntax_error == 0:
-                        c.send("500 Syntax error: command unrecognized")
+                        c.send("500 Syntax error: command unrecognized\n".encode())
                     else:
-                        c.send("501 Syntax error in parameters or arguments")
+                        c.send("501 Syntax error in parameters or arguments\n".encode())
                     previous = 0
                     data = ""
                     file_path = []
         elif previous == 1:
             if is_rcpt_to_cmd(message):
-                c.send("250 OK")
+                c.send("250 OK\n".encode())
                 previous = 2
                 rcpt_tp = re.search('<(.+?)>', message)
                 if rcpt_tp:
                     address = rcpt_tp.group(1)
-                data += "To: <" + address + ">\n"
-                path = "HW2/forward/" + address
+                domain = address.split("@",1)[1]
+                path = "HW4/forward/" + domain
                 file_path.append(path)
             else:
                 if is_mail_from_cmd(message) or is_data_cmd(message):
-                    c.send("503 Bad sequence of commands")
+                    c.send("503 Bad sequence of commands\n".encode())
                     previous = 0
                     data = ""
                     file_path = []
                 else:
                     if syntax_error == 0:
-                        c.send("500 Syntax error: command unrecognized")
+                        c.send("500 Syntax error: command unrecognized\n".encode())
                     else:
-                        c.send("501 Syntax error in parameters or arguments")
+                        c.send("501 Syntax error in parameters or arguments\n".encode())
                     previous = 0
                     data = ""
                     file_path = []
         elif previous == 2:
             if is_rcpt_to_cmd(message):
-                c.send("250 OK")
+                c.send("250 OK\n".encode())
                 previous = 2
                 rcpt_tp = re.search('<(.+?)>', message)
                 if rcpt_tp:
                     address = rcpt_tp.group(1)
-                path = "HW2/forward/" + address
-                data += "To: <" + address + ">\n"
+                domain = address.split("@",1)[1]
+                path = "HW4/forward/" + domain
                 file_path.append(path)
             elif is_data_cmd(message):
-                c.send("354 Start mail input; end with <CRLF>.<CRLF>")
+                c.send("354 Start mail input; end with <CRLF>.<CRLF>\n".encode())
                 previous = 3
             else:
                 if is_mail_from_cmd(message):
-                    c.send("503 Bad sequence of commands")
+                    c.send("503 Bad sequence of commands\n".encode())
                     previous = 0
                     data = ""
                     file_path = []
                 else:
                     if syntax_error == 0:
-                        c.send("500 Syntax error: command unrecognized")
+                        c.send("500 Syntax error: command unrecognized\n".encode())
                     else:
-                        c.send("501 Syntax error in parameters or arguments")
+                        c.send("501 Syntax error in parameters or arguments\n".encode())
                     previous = 0
                     data = ""
                     file_path = []
@@ -358,7 +358,7 @@ while True:
             data += message
             if_data = True
             dup_data = data
-            if data[-3:] == "\n.\n":
+            if data[-2:] == ".\n":
                 for path in file_path:
                     f = open(path, "a")
                     f.write(data[:-2])
@@ -366,7 +366,7 @@ while True:
                 data = ""
                 file_path = []
                 if_data = False
-                c.send("250 OK")
+                c.send("250 OK\n".encode())
                 previous = 0
         syntax_error = 0
 

@@ -27,30 +27,48 @@ def input_message():
     sys.stdout.write("Message:\n")
     message = ""
     while True:
-        line = next_input_line()
-        message += line
-        if (line == ".\n" or line == '.' or line.find('.')== 0):
+        line = input()
+        message += line + "\n"
+        if line == ".":
             break
     return message
 
 
-def input_email():
+def input_email(socket):
     email = {"from": "", "to": "", "subject": "", "message": ""}
     email['from'] = input_from()
+    if email['from'] == "QUIT":
+        socket.send("QUIT\n".encode())
+        receive_data_from_server(socket)
+        socket.close()
+        quit()
     email['to'] = input_to()
+    if email['to'] == "QUIT":
+        socket.send("QUIT\n".encode())
+        receive_data_from_server(socket)
+        socket.close()
+        quit()
     email['subject'] = input_subject()
+    if email['subject'] == "QUIT":
+        socket.send("QUIT\n".encode())
+        receive_data_from_server(socket)
+        socket.close()
+        quit()
     email['message'] = input_message()
+    if email['message'] == "QUIT":
+        socket.send("QUIT\n".encode())
+        receive_data_from_server(socket)
+        socket.close()
+        quit()
     return email
 
 def send_data_to_server(data, socket):
-    try:
-        if(isinstance(data, list) == True):
-            socket.send(data[0].encode())
-            socket.send('.\n'.encode())
-        else:
-            socket.send(data.encode())
-    except socket.error as err:
-        print(err)
+    if(isinstance(data, list) == True):
+        socket.send(data[0].encode())
+        socket.send('.\n'.encode())
+    else:
+        socket.send(data.encode())
+
 
 def receive_data_from_server(socket):
     try:
@@ -65,16 +83,14 @@ def receive_data_from_server(socket):
 def get_server_response_code(socket):
     response = receive_data_from_server(socket)
     response_code = ""
-    #todo: only accept printable characters (instead of .*)
     match = re.fullmatch("(250|354|500|501|503)[ \t]+.*\n", response)
     if match:
-        response_code = match.group(1)
-
+        response_code = match.group(1) 
     return response_code
 
 
 def send_data_to_server_and_expect_response_code(data, expected_response_code, socket):
-    send_data_to_server(data,socket)
+    socket.send(data.encode())
     response_code = get_server_response_code(socket)
     if response_code != expected_response_code:
         quit_smtp(socket)
@@ -132,7 +148,7 @@ while (True):
             conductGreetings(host, s)
             serverSocket = s
             connected = True
-        email = input_email()
+        email = input_email(serverSocket) 
         send_email(email, serverSocket)
     except EOFError:
         quit_smtp(serverSocket)
