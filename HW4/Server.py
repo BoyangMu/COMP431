@@ -255,6 +255,7 @@ connected = False
 s = socket.socket()
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 host = socket.gethostname()
+print(host)
 port = int(sys.argv[1])
 s.bind((host,port))
 s.listen(5)
@@ -270,8 +271,7 @@ while True:
     c.send(f"220 {host}\n".encode())
     message = c.recv(4096).decode()
     if connected == False:
-        parsed = message.trim().split("\\s+")
-        server_message = "250 Hello " + parsed[1] + "pleased to meet you\n"
+        server_message = "250 Hello " + message[4:] + "pleased to meet you\n"
         c.send(server_message.encode())
         connected = True
     else:
